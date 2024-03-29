@@ -1,0 +1,6 @@
+data/*
+*.code-workspace
+*_env/
+__pycache__
+*.dat
+*.zip
