@@ -1,6 +1,7 @@
 from mcculw import ul
 from mcculw.enums import ScanOptions
 from mcculw.device_info import DaqDeviceInfo
+from ctypes import cast, POINTER, c_double, c_ushort, c_ulong
 
 class daq1408:
     def __init__(self, device:int, input_mode = 'unused'):
@@ -16,7 +17,7 @@ class daq1408:
         return self.ai_info.supported_ranges[0]
     @property
     def max_chan(self):
-        return self.ai_info.num_chans
+        return self.ai_info.num_chans-1
     
     def analog_read(self, channel):
         return ul.a_in(self.board_num, channel, self.ai_range)
@@ -27,8 +28,9 @@ class daq1408:
         n_channels = high_chan - low_chan +1
 
         n_points = n_points_per_channel*n_channels
-        data_buffer = ul.win_buf_alloc(n_points)
+        memhandle = ul.win_buf_alloc(n_points)
+        data_buffer = cast(memhandle, POINTER(c_ushort))
         options = (ScanOptions.FOREGROUND)
         ul.a_in_scan(self.board_num,low_chan,high_chan,n_points,rate,
-                        self.ai_range,data_buffer,options)
+                        self.ai_range,memhandle,options)
         return data_buffer

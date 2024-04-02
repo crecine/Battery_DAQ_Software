@@ -99,6 +99,45 @@ def dataacq(board:daq1408, zeros=None, spans=None, sample_rate=10):
     return dataavg
 
 #***************************************************************************************
+
+def terminator(val, trigger):
+    if abs(val) < trigger['tol']:
+        trigger['num']+=1
+    else:
+        trigger['num']=0
+    if trigger['num'] > trigger['max']:
+        return True
+    else:
+        return False
+    
+class Terminator2:
+    def __init__(self, max_successive=5, tol=.0001, max_iter=20000):
+        self.check_num = 0
+        self.max_successive = max_successive
+        self.tol = tol
+        self.current_iter = 0
+        self.max_iter = max_iter
+
+    def check_var(self,val):
+        self.current_iter += 1
+        if abs(val) < self.tol:
+            self.check_num+=1
+        else:
+            self.check_num=0
+    
+    def __bool__(self):
+        if self.check_num > self.max_successive:
+            print('Terminating due to trigger condition')
+            return True
+        elif self.current_iter > self.max_iter:
+            print('Maximum iterations reached')
+            return True
+        else:
+            return False
+    __nonzero__=__bool__
+    
+
+#***************************************************************************************
 # https://esd.nasa.gov/now/nav/ui/classic/params/target/u_scan_assessed_cleared_list.do
     # %3Fsys_id%3D9d7a353f1b43e1549ad4cbb6624bcbf5
     # %3Fsys_id%3Da17ab53f1b43e1549ad4cbb6624bcb75

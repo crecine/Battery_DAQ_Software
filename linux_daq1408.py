@@ -26,11 +26,12 @@ class daq1408:
             high_chan = self.max_chan
         n_channels = high_chan - low_chan +1
 
+        aq_time = n_points_per_channel/rate
         data_buffer = uldaq.create_float_buffer(n_channels,n_points_per_channel)
         options = uldaq.ScanOption.DEFAULTIO
         flags = uldaq.AInScanFlag.DEFAULT
         rate = self.device.a_in_scan(low_chan,high_chan,self.input_mode,self.ai_range,
                                 n_points_per_channel,rate,options,flags,data_buffer)
-        self.device.scan_wait(uldaq.WaitType.WAIT_UNTIL_DONE,10)
+        self.device.scan_wait(uldaq.WaitType.WAIT_UNTIL_DONE,aq_time*4)
         return data_buffer
     
