@@ -1,37 +1,42 @@
 from numpy import loadtxt
 from daq_utils import daq1408
 
-def calibration(board:daq1408, ical=1):
-    if ical==1:           # calibrate
+def calibration(board:daq1408, read_cal=False):
+    if not read_cal:           # calibrate
         # Open a file to write calibration coefficients, prompt responses and averaged data from all channels
         print("\nSet a low signal to all channels and press enter to take calibration point: ", end=" ")
         input()
 
-        dataavglow = dataacq(board)     # Acquire the low voltage calibration data
-
+        low_current = dataacq(board)     # Acquire the low current calibration data
         print("\nEnter current in Amps set on channel 0: ", end=" ")
         curlow = float(input())
 
+        low_voltage = dataacq(board)     # Acquire the low voltage calibration data
         print("\nEnter voltage in set on channels 1 through 7: ", end=" ")
         voltlow = float(input())
 
         print("\nSet a high signal to all channels and press enter to take calibration point: ", end=" ")
         input()
 
-        dataavghigh = dataacq(board)     # Acquire the high voltage calibration data     
-
+        high_current = dataacq(board)     # Acquire the high current calibration data     
         print("\nEnter current in Amps set on channel 0: ", end=" ")
         curhigh = float(input())
 
+        high_voltage = dataacq(board)     # Acquire the high voltage calibration data   
         print("\nEnter voltage in set on channels 1 through 7: ", end=" ")
         volthigh = float(input())
 
+        dataavglow = [low_current[0],*low_voltage[1:]]
+        dataavghigh = [high_current[0],*high_voltage[1:]]
+
     #  Compute the calibration coefficients for each channel assuming linearity ( measurement in engineering units = s[i]*counts+z[i] )
         s, z = [0]*8, [0]*8
+        print(dataavghigh)
+        print(dataavglow)
         s[0]=(curhigh-curlow)/(dataavghigh[0]- dataavglow[0])
         z[0]=curhigh-s[0]* dataavghigh[0]
 
-        for i in range(1,8):
+        for i in range(len(dataavghigh)):
             s[i]= (volthigh-voltlow)/(dataavghigh[i]- dataavglow[i])
             z[i] = volthigh-s[i]* dataavghigh[i]
         
@@ -41,7 +46,7 @@ def calibration(board:daq1408, ical=1):
             output_file.write(str(z).strip('[]'))
 
 
-    elif ical==2:        # read arrays z and s from disk file
+    else:        # read arrays z and s from disk file
         lines = loadtxt("cal.dat", comments="#", delimiter=",", unpack=False)
         print(lines)
         [s,z] = lines
@@ -53,6 +58,7 @@ def calibration(board:daq1408, ical=1):
     print("\nThe calibration span values are : ", end=" ")
     for i in range(0,8):
         print(s[i], end=" ")
+    print()
 
     return z, s
 
@@ -127,18 +133,11 @@ class Terminator2:
     
     def __bool__(self):
         if self.check_num > self.max_successive:
-            print('Terminating due to trigger condition')
+            print('\n\nTerminating due to trigger condition')
             return True
         elif self.current_iter > self.max_iter:
-            print('Maximum iterations reached')
+            print('\n\nMaximum iterations reached')
             return True
         else:
             return False
     __nonzero__=__bool__
-    
-
-#***************************************************************************************
-# https://esd.nasa.gov/now/nav/ui/classic/params/target/u_scan_assessed_cleared_list.do
-    # %3Fsys_id%3D9d7a353f1b43e1549ad4cbb6624bcbf5
-    # %3Fsys_id%3Da17ab53f1b43e1549ad4cbb6624bcb75
-#***************************************************************************************

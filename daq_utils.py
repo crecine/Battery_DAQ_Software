@@ -1,4 +1,5 @@
-from sys import platform, stdout
+from sys import platform
+from utils import prompt_yes_no
 if platform.startswith('win'):
     from mcculw import ul
     from mcculw.enums import InterfaceType
@@ -9,10 +10,10 @@ else:
     from linux_daq1408 import daq1408
 
 
-def config_first_detected_device(board_num, dev_id_list=None):
+def config_first_detected_device(board_num=0, dev_id_list=None):
     """
     For Windows, this will return the board_number, for Linux it will return a DaqDevice.
-    In either case, the result can be passed directly to daq1408() to initialize it.
+    In either case, the result will be passed directly to daq1408() to initialize it.
 
     Adapted from mcculw/examples/console/console_examples_util.py
     Adds the first available device to the UL.  If a types_list is specified,
@@ -28,7 +29,10 @@ def config_first_detected_device(board_num, dev_id_list=None):
         See UL documentation for device IDs.
     """
     if platform.startswith('win'):
-        ul.ignore_instacal()
+        print(' Windows detected, use InstaCal configuration? ')
+        use_ical = prompt_yes_no()
+        if not use_ical:
+            ul.ignore_instacal()
         devices = ul.get_daq_device_inventory(InterfaceType.ANY)
     else:
         devices = uldaq.get_daq_device_inventory(InterfaceType.ANY)
@@ -41,7 +45,7 @@ def config_first_detected_device(board_num, dev_id_list=None):
         print('  ', device.product_name, ' (', device.unique_id, ') - ',
               'Device ID = ', device.product_id, sep='')
 
-    device = devices[0]
+    device = devices[board_num]
     if dev_id_list:
         device = next((device for device in devices
                        if device.product_id in dev_id_list), None)
@@ -49,20 +53,17 @@ def config_first_detected_device(board_num, dev_id_list=None):
             err_str = 'Error: No DAQ device found in device ID list: '
             err_str += ','.join(str(dev_id) for dev_id in dev_id_list)
             raise Exception(err_str)
+        
+    print('Using:  ', device.product_name, ' (', device.unique_id, ') - ',
+            'Device ID = ', device.product_id, sep='')
 
     if platform.startswith('win'):
         # Add the first DAQ device to the UL with the specified board number
-        ul.create_daq_device(board_num, device)
-        return board_num
+        if not use_ical:
+            ul.create_daq_device(board_num, device)
+        daq = daq1408(board_num)
+        daq._use_ical = use_ical
+        return daq
     else:
-        return DaqDevice(device)
-
-        
-def reset_cursor():
-    """Reset the cursor in the terminal window."""
-    stdout.write('\033[1;1H')
-
-
-def clear_eol():
-    """Clear all characters to the end of the line."""
-    stdout.write('\x1b[2K')
+        daq = daq1408(DaqDevice(device))
+        return daq

@@ -1,12 +1,15 @@
 import uldaq
 from uldaq import DaqDevice, ScanStatus
 
+
+
 class daq1408:
     def __init__(self, device:DaqDevice, input_mode = uldaq.AiInputMode.SINGLE_ENDED):
         self.device = device.get_ai_device()
         device.connect(connection_code=0)
         self.board_num = 0
         self.input_mode = input_mode
+        self._daq_device = device
 
     @property
     def ai_info(self):
@@ -34,4 +37,12 @@ class daq1408:
                                 n_points_per_channel,rate,options,flags,data_buffer)
         self.device.scan_wait(uldaq.WaitType.WAIT_UNTIL_DONE,aq_time*4)
         return data_buffer
-    
+
+    def release(self):
+        status, transfer_status = self.device.get_scan_status()
+        # Stop the acquisition if it is still running.
+        if status == ScanStatus.RUNNING:
+            self.device.scan_stop()
+        if self._daq_device.is_connected():
+            self._daq_device.disconnect()
+        self._daq_device.release()

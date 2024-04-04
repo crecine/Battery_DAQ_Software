@@ -1,5 +1,6 @@
 from data_utils import calibration, dataacq, Terminator2
-from daq_utils import config_first_detected_device, daq1408
+from daq_utils import config_first_detected_device
+from utils import prompt_yes_no, print_data
 
 import time
 import pandas as pd
@@ -11,38 +12,52 @@ header_keys = ['t','I','V1','V2','V3','V4','V5','V6','V7']
 # time and date stamp the csv data file
 local_time=time.ctime().replace(':','-').replace(' ','_')
 print("local time:",local_time)
+output_filename = f"data/test_results_{local_time}.csv"
 
-# configure first detected device as board number 1
-board = config_first_detected_device(1)
-daq = daq1408(board)
+# configure first detected device as board number 0
+daq = config_first_detected_device(0)
 
-print(' Enter 1 to calibrate or 2 (default) to read calibration data from cal.dat file ')
-ical = input()
-ical = int(ical) if ical!='' else 2
+print(' Read calibration data from cal.dat file? ')
+read_cal = prompt_yes_no() #True to use stored calibration, False to calibrate now
 #  function returns calibration coefficients zero array (z[]) and span array (s[]) for channels 0-7
-z, s = calibration(daq, ical)
-                                                     
+z, s = calibration(daq, read_cal)
+
+print('\nEnter run/configuration name: ')
+run_name = input()
+
 # Acquire the battery test data.
-print('\nPress enter to start data acquisition')
-idat = input()
+idat = input('\nPress enter to start data acquisition:')
+print('Starting Acquisition')
 
 startseconds = time.time()   #  Get the start time in seconds
 
 dataavg = []
 datatime1 = time.time()
-# trigger = {'num':0, 'max':3, 'tol':.0001}
 term = Terminator2(max_successive=6,tol=.0001,max_iter=200)
-# for ii in range(10): #20000
-while not term:
-    #  function returns 5 seconds of averaged data for each channel in the dataavg[] array
-    data = [datatime1-startseconds,*dataacq(daq,z,s)]
-    dataavg.append({key:val for key,val in zip(header_keys,data)})
-    datatime2 = time.time()
-    print(f'finished point {term.current_iter} in {datatime2-datatime1} seconds')
-    datatime1 = datatime2
-    term.check_var(data[1]*0)
-    # if terminator(0,trigger):
-    #     break
+with open(output_filename,'w') as output_file:
+    output_file.write(local_time+'\n')
+    output_file.write(run_name+'\n')
+    output_file.write(','.join(header_keys)+'\n')
+    print_data(header_keys,'\n')
+    try:
+        while not term:
+            #  function returns 5 seconds of averaged data for each channel in the dataavg[] array
+            data = [datatime1-startseconds,*dataacq(daq,z,s)]
+            dataavg.append({key:val for key,val in zip(header_keys,data)})
+            output_file.write(','.join([str(d) for d in data])+'\n')
+            print_data(data)
+            datatime2 = time.time()
+            # print(f'finished point {term.current_iter} in {datatime2-datatime1} seconds')
+            datatime1 = datatime2
+            term.check_var(data[1])
+    except KeyboardInterrupt:
+        pass
+    except Exception as e:
+        print('\n', e)
+    finally:
+        # Free the buffer in a finally block to prevent a memory leak.
+        daq.release
+
 
 #  Get the time 
 seconds = time.time() #  Get the current time in seconds
@@ -54,5 +69,5 @@ print("Total time:", ellapseseconds)
 df = pd.DataFrame(dataavg)
 print(df)
 
-output_filename = f"data/test_results_{local_time}.csv"
-df.to_csv(output_filename, index=False)
+
+# df.to_csv(output_filename, index=False)

@@ -8,6 +8,8 @@ class daq1408:
         self.device = DaqDeviceInfo(device)
         self.board_num = device
         self.input_mode = input_mode
+        self._use_ical = True
+
 
     @property
     def ai_info(self):
@@ -27,10 +29,17 @@ class daq1408:
             high_chan = self.max_chan
         n_channels = high_chan - low_chan +1
 
-        n_points = n_points_per_channel*n_channels
-        memhandle = ul.win_buf_alloc(n_points)
+        total_count = n_points_per_channel*n_channels
+        memhandle = self._memhandle = ul.win_buf_alloc(total_count)
         data_buffer = cast(memhandle, POINTER(c_ushort))
-        options = (ScanOptions.FOREGROUND)
-        ul.a_in_scan(self.board_num,low_chan,high_chan,n_points,rate,
+        options = ScanOptions.FOREGROUND
+
+        ul.a_in_scan(self.board_num,low_chan,high_chan,total_count,rate,
                         self.ai_range,memhandle,options)
         return data_buffer
+
+    def release(self):
+        if self._memhandle:
+            ul.win_buf_free(self._memhandle)
+        if self._use_ical:
+            ul.release_daq_device(self.board_num)
