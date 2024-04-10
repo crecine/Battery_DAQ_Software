@@ -32,7 +32,7 @@ class daq1408:
         aq_time = n_points_per_channel/rate
         data_buffer = uldaq.create_float_buffer(n_channels,n_points_per_channel)
         options = uldaq.ScanOption.DEFAULTIO
-        flags = uldaq.AInScanFlag.DEFAULT
+        flags = uldaq.AInScanFlag.NOSCALEDATA #should output counts instead of volts
         rate = self.device.a_in_scan(low_chan,high_chan,self.input_mode,self.ai_range,
                                 n_points_per_channel,rate,options,flags,data_buffer)
         self.device.scan_wait(uldaq.WaitType.WAIT_UNTIL_DONE,aq_time*4)

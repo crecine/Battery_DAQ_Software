@@ -41,5 +41,4 @@ class daq1408:
     def release(self):
         if self._memhandle:
             ul.win_buf_free(self._memhandle)
-        if self._use_ical:
-            ul.release_daq_device(self.board_num)
+        ul.release_daq_device(self.board_num)

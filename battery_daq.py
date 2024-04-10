@@ -1,6 +1,7 @@
 from data_utils import calibration, dataacq, Terminator2
 from daq_utils import config_first_detected_device
 from utils import prompt_yes_no, print_data
+from pathlib import Path
 
 import time
 import pandas as pd
@@ -10,9 +11,12 @@ import pandas as pd
 header_keys = ['t','I','V1','V2','V3','V4','V5','V6','V7']
 
 # time and date stamp the csv data file
-local_time=time.ctime().replace(':','-').replace(' ','_')
+local_time=time.ctime().replace(':','-').replace('  ',' ').replace(' ','_')
 print("local time:",local_time)
 output_filename = f"data/test_results_{local_time}.csv"
+out_file = Path(output_filename)
+if not out_file.parent.exists():
+    out_file.parent.mkdir(parents=True, exist_ok=True)
 
 # configure first detected device as board number 0
 daq = config_first_detected_device(0)
@@ -33,23 +37,27 @@ startseconds = time.time()   #  Get the start time in seconds
 
 dataavg = []
 datatime1 = time.time()
-term = Terminator2(max_successive=6,tol=.0001,max_iter=200)
+term = Terminator2(max_successive=12,tol=.05,max_iter=20000)
+
 with open(output_filename,'w') as output_file:
     output_file.write(local_time+'\n')
     output_file.write(run_name+'\n')
     output_file.write(','.join(header_keys)+'\n')
     print_data(header_keys,'\n')
     try:
-        while not term:
-            #  function returns 5 seconds of averaged data for each channel in the dataavg[] array
-            data = [datatime1-startseconds,*dataacq(daq,z,s)]
-            dataavg.append({key:val for key,val in zip(header_keys,data)})
-            output_file.write(','.join([str(d) for d in data])+'\n')
-            print_data(data)
-            datatime2 = time.time()
-            # print(f'finished point {term.current_iter} in {datatime2-datatime1} seconds')
-            datatime1 = datatime2
-            term.check_var(data[1])
+        while term.continue_reading:
+            while not term:
+                #  function returns 5 seconds of averaged data for each channel in the dataavg[] array
+                data = [datatime1-startseconds,*dataacq(daq,z,s)]
+                dataavg.append({key:val for key,val in zip(header_keys,data)})
+                output_file.write(','.join([str(d) for d in data])+'\n')
+                print_data(data)
+                datatime2 = time.time()
+                # print(f'finished point {term.current_iter} in {datatime2-datatime1} seconds')
+                datatime1 = datatime2
+                term.check_var(data[1])
+            term.reset()
+            output_file.write('\n')
     except KeyboardInterrupt:
         pass
     except Exception as e:

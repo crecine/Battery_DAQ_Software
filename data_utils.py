@@ -1,30 +1,31 @@
 from numpy import loadtxt
 from daq_utils import daq1408
+from utils import prompt_yes_no, round_it, float_input
 
 def calibration(board:daq1408, read_cal=False):
     if not read_cal:           # calibrate
         # Open a file to write calibration coefficients, prompt responses and averaged data from all channels
-        print("\nSet a low signal to all channels and press enter to take calibration point: ", end=" ")
+        print("\nSet a low signal to all channels and press enter: ", end=" ")
         input()
 
-        low_current = dataacq(board)     # Acquire the low current calibration data
-        print("\nEnter current in Amps set on channel 0: ", end=" ")
-        curlow = float(input())
-
+        print("\nEnter voltage in Volts set on channels 1 through 7: ", end=" ")
+        voltlow = float_input()
         low_voltage = dataacq(board)     # Acquire the low voltage calibration data
-        print("\nEnter voltage in set on channels 1 through 7: ", end=" ")
-        voltlow = float(input())
 
-        print("\nSet a high signal to all channels and press enter to take calibration point: ", end=" ")
+        print("\nEnter current in Amps set on channel 0: ", end=" ")
+        curlow = float_input()
+        low_current = dataacq(board)     # Acquire the low current calibration data
+
+        print("\nSet a high signal to all channels and press enter: ", end=" ")
         input()
 
-        high_current = dataacq(board)     # Acquire the high current calibration data     
-        print("\nEnter current in Amps set on channel 0: ", end=" ")
-        curhigh = float(input())
-
+        print("\nEnter voltage in Volts set on channels 1 through 7: ", end=" ")
+        volthigh = float_input()
         high_voltage = dataacq(board)     # Acquire the high voltage calibration data   
-        print("\nEnter voltage in set on channels 1 through 7: ", end=" ")
-        volthigh = float(input())
+ 
+        print("\nEnter current in Amps set on channel 0: ", end=" ")
+        curhigh = float_input()
+        high_current = dataacq(board)     # Acquire the high current calibration data
 
         dataavglow = [low_current[0],*low_voltage[1:]]
         dataavghigh = [high_current[0],*high_voltage[1:]]
@@ -36,7 +37,7 @@ def calibration(board:daq1408, read_cal=False):
         s[0]=(curhigh-curlow)/(dataavghigh[0]- dataavglow[0])
         z[0]=curhigh-s[0]* dataavghigh[0]
 
-        for i in range(len(dataavghigh)):
+        for i in range(1,len(dataavghigh)):
             s[i]= (volthigh-voltlow)/(dataavghigh[i]- dataavglow[i])
             z[i] = volthigh-s[i]* dataavghigh[i]
         
@@ -53,18 +54,18 @@ def calibration(board:daq1408, read_cal=False):
 
     print("\nThe calibration zeros are : ", end=" ")
     for i in range(0,8):
-        print(z[i], end=" ")
+        print(round(z[i],5), end=" ")
 
     print("\nThe calibration span values are : ", end=" ")
     for i in range(0,8):
-        print(s[i], end=" ")
+        print(round(s[i],5), end=" ")
     print()
 
     return z, s
 
 #***************************************************************************************
 
-def dataacq(board:daq1408, zeros=None, spans=None, sample_rate=10):   
+def dataacq(board:daq1408, zeros=None, spans=None, sample_rate=200, sample_period=5):   
     '''
     collect 5 seconds of data, average the data and apply the calibration for each channel
     if zeros and spans are not specified, they will default to 0 and 1
@@ -79,8 +80,6 @@ def dataacq(board:daq1408, zeros=None, spans=None, sample_rate=10):
 #  Channels 1 to 7 are battery voltage measurements 
 
     numchan = board.max_chan+1  #  total number of channels to scan
-    sample_rate = 10             # (hz) sample frequency for each channel
-    sample_period = 5            # (s) sample period
 
     # Acquire data buffer ibuf[] of size ibuflength from A-D.
     n_points_per_chan = sample_period * sample_rate
@@ -90,7 +89,7 @@ def dataacq(board:daq1408, zeros=None, spans=None, sample_rate=10):
     countavg = [0]*numchan
     for ii in range(numchan):
         for jj in range(sample_period*sample_rate):
-            m = jj + ii*numchan
+            m = ii + jj*numchan
             countavg[ii] += ibuf[m]
         countavg[ii] /= n_points_per_chan
 
@@ -101,7 +100,7 @@ def dataacq(board:daq1408, zeros=None, spans=None, sample_rate=10):
         spans = [1]*numchan
 
     dataavg = [s*avg+z for (avg,z,s) in zip(countavg,zeros,spans)]
-    
+
     return dataavg
 
 #***************************************************************************************
@@ -123,6 +122,7 @@ class Terminator2:
         self.tol = tol
         self.current_iter = 0
         self.max_iter = max_iter
+        self.continue_reading = True
 
     def check_var(self,val):
         self.current_iter += 1
@@ -130,6 +130,11 @@ class Terminator2:
             self.check_num+=1
         else:
             self.check_num=0
+    
+    def reset(self):
+        print('\nContinue Reading?')
+        self.continue_reading = prompt_yes_no(' [y/N] ', default=False)
+        self.check_num = 0
     
     def __bool__(self):
         if self.check_num > self.max_successive:

@@ -10,6 +10,16 @@ def prompt_yes_no(prompt=' [Y/n] ', default=True):
     else:
         return default
     
+def float_input():
+    while True:
+        var = input()
+        try:
+            val = float(var)
+            return val
+        except:
+            print(f"{var} couldn't be converted to a float. Try again")
+
+
 def round_it(x, sig=None):
     # default sig figs to 2 decimal places out
     if isinstance(x, str):
@@ -24,12 +34,12 @@ def round_it(x, sig=None):
     else:
         return 0
     
-def print_data(data, end='\r'):
+def print_data(data, end='\r',sigfigs=5):
     data_string =[]
     for d in data:
         if not isinstance(d,str):
-            d = str(round_it(d,5))
-        data_string.append(' '*(8-len(d))+d)
+            d = str(round_it(d,sigfigs))
+        data_string.append(' '*(10-len(d))+d)
     print(','.join(data_string), end=end, flush=True)
     
 def reset_cursor():
