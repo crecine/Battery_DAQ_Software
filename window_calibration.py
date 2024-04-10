@@ -1,7 +1,8 @@
 import tkinter as tk
+from numpy import loadtxt
+
 from utils import round_it
 from gui_utils import FloatEntry, Variable, Point
-from numpy import loadtxt
 from data_utils import dataacq
 from window_settings import configuration
 

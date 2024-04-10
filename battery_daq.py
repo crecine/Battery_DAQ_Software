@@ -1,9 +1,9 @@
+import time
+import pandas as pd
+
 from data_utils import calibration, dataacq, Terminator2, get_path
 from daq_utils import config_first_detected_device
 from utils import prompt_yes_no, print_data
-
-import time
-import pandas as pd
 
 #  NOTE: Current sensor hooked up to channel 0 and channels 1 to 7 will be voltage measurements with a 
 #              voltage divider in place and so all channels will be calibrated. The same voltage will be applied to channels 1 to 7 during calibration.

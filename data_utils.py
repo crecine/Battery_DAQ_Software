@@ -1,7 +1,8 @@
 from numpy import loadtxt
+from pathlib import Path
+
 from daq_utils import daq1408
 from utils import prompt_yes_no, round_it, float_input
-from pathlib import Path
 
 def calibration(board:daq1408, read_cal=False):
     if not read_cal:           # calibrate

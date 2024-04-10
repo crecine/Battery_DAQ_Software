@@ -8,7 +8,6 @@ else:
     import uldaq
     from uldaq import InterfaceType, DaqDevice
     from linux_daq1408 import daq1408
-from dummy_daq1408 import daq1408 as dummy
 
 def config_first_detected_device(board_num=0, dev_id_list=None, use_dummy=False):
     """
@@ -38,8 +37,9 @@ def config_first_detected_device(board_num=0, dev_id_list=None, use_dummy=False)
         devices = uldaq.get_daq_device_inventory(InterfaceType.ANY)
 
     if not devices and use_dummy:
+        from dummy_daq1408 import daq1408
         print('using dummy device')
-        return dummy(board_num)
+        return daq1408(board_num)
 
     if not devices:
         raise Exception('Error: No DAQ devices found')

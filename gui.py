@@ -1,8 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
-from numpy import loadtxt
-from os import listdir, environ, system, path as ospath
-from sys import platform as platform_, path as syspath
+from os import environ, system
+from sys import platform as platform_
 import time
 
 from window_calibration import calibration, read_cal_file
@@ -117,7 +116,6 @@ tab2.dispframe = tk.Frame(tab2,borderwidth=2,relief='groove')
 tab2.dispframe.pack()
 coming_soon = tk.Label(tab2.dispframe,text='Coming Soon')
 coming_soon.pack()
-from window_calibration import calibration
 calibration.add_data_row(self=tab2,data_set=[0]*4,title='')
 calibration.add_data_row(self=tab2,data_set=[0]*4,title='')
 

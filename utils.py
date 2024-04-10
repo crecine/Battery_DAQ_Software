@@ -1,5 +1,6 @@
 from sys import stdout
 from math import floor, log10
+from time import perf_counter as timer, sleep
 
 def prompt_yes_no(prompt=' [Y/n] ', default=True):
     choice = input(prompt).lower()
@@ -50,6 +51,18 @@ def reset_cursor():
 def clear_eol():
     """Clear all characters to the end of the line."""
     stdout.write('\x1b[2K')
+
+def high_precision_sleep(duration):
+    start_time = timer()
+    while True:
+        elapsed_time = timer() - start_time
+        remaining_time = duration - elapsed_time
+        if remaining_time <= 0:
+            break
+        if remaining_time > 0.02:  # Sleep for 5ms if remaining time is greater
+            sleep(max(remaining_time/2, 0.0001))  # Sleep for the remaining time or minimum sleep interval
+        else:
+            pass
 
 #***************************************************************************************
 # https://esd.nasa.gov/now/nav/ui/classic/params/target/u_scan_assessed_cleared_list.do

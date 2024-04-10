@@ -1,5 +1,7 @@
 import numpy as np
-from time import perf_counter as timer, sleep
+from time import perf_counter as timer
+
+from utils import high_precision_sleep
 
 class daq1408:
     def __init__(self, device:int, input_mode = 'unused'):
@@ -33,18 +35,8 @@ class daq1408:
 
         return np.random.uniform(*self.ai_range,n_points_per_channel*n_channels)
 
+
+
+
     def release(self):
         pass
-
-
-def high_precision_sleep(duration):
-    start_time = timer()
-    while True:
-        elapsed_time = timer() - start_time
-        remaining_time = duration - elapsed_time
-        if remaining_time <= 0:
-            break
-        if remaining_time > 0.02:  # Sleep for 5ms if remaining time is greater
-            sleep(max(remaining_time/2, 0.0001))  # Sleep for the remaining time or minimum sleep interval
-        else:
-            pass

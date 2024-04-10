@@ -1,4 +1,5 @@
 import tkinter as tk
+
 from gui_utils import FloatEntry, PosIntegerEntry
 from dummy_daq1408 import daq1408
 
@@ -44,7 +45,7 @@ class settings(tk.Tk):
         self.destroy()
 
 class configuration():
-    board = None
+    board = None #use dummy as a default?
     header_keys = ['t','I','V1','V2','V3','V4','V5','V6','V7']
     filename = 'test_results'
     max_successive=12
@@ -71,3 +72,4 @@ class configuration():
     @classmethod
     def setattr(cls,name,value):
         return cls.__setattr__(cls,name,value)
+    

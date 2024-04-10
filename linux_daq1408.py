@@ -46,3 +46,4 @@ class daq1408:
         if self._daq_device.is_connected():
             self._daq_device.disconnect()
         self._daq_device.release()
+        
