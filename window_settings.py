@@ -1,4 +1,6 @@
 import tkinter as tk
+from gui_utils import FloatEntry, PosIntegerEntry
+from dummy_daq1408 import daq1408
 
 class settings(tk.Tk):
     def __init__(self, screenName: tuple[str, None] = None, baseName: tuple[str, None] = None, className: str = "Tk", useTk: bool = True, sync: bool = False, use: tuple[str, None] = None) -> None:
@@ -18,15 +20,18 @@ class settings(tk.Tk):
         attr = configuration.getattr(name)
         if isinstance(attr,str):
             var = tk.StringVar()
+            entry = tk.Entry
         elif isinstance(attr,float):
             var = tk.DoubleVar()
+            entry = FloatEntry
         elif isinstance(attr,int):
             var = tk.IntVar
+            entry = PosIntegerEntry
         else:
             raise TypeError(f'{type(attr)} is not a valid type')
         label = tk.Label(self.frame,text=name)
         label.grid(column=0,row=self.num_settings,sticky='w')
-        entry = tk.Entry(self.frame,textvariable=var)
+        entry = entry(self.frame,textvariable=var)
         entry.insert(0,str(attr))
         entry.grid(column=1,row=self.num_settings,sticky='w')
         self.num_settings+=1
@@ -40,6 +45,7 @@ class settings(tk.Tk):
 
 class configuration():
     board = None
+    header_keys = ['t','I','V1','V2','V3','V4','V5','V6','V7']
     filename = 'test_results'
     max_successive=12
     tol=.05

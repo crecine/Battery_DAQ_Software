@@ -1,7 +1,6 @@
-from data_utils import calibration, dataacq, Terminator2
+from data_utils import calibration, dataacq, Terminator2, get_path
 from daq_utils import config_first_detected_device
 from utils import prompt_yes_no, print_data
-from pathlib import Path
 
 import time
 import pandas as pd
@@ -14,12 +13,20 @@ header_keys = ['t','I','V1','V2','V3','V4','V5','V6','V7']
 local_time=time.ctime().replace(':','-').replace('  ',' ').replace(' ','_')
 print("local time:",local_time)
 output_filename = f"data/test_results_{local_time}.csv"
-out_file = Path(output_filename)
-if not out_file.parent.exists():
-    out_file.parent.mkdir(parents=True, exist_ok=True)
+out_file = get_path(output_filename)
 
 # configure first detected device as board number 0
 daq = config_first_detected_device(0)
+try:
+    from tkinter import Tk
+    Tk()
+    print('Launch GUI?')
+    if prompt_yes_no():
+        from window_settings import configuration
+        configuration.board = daq
+        configuration.header_keys = header_keys
+except:
+    pass
 
 print(' Read calibration data from cal.dat file? ')
 read_cal = prompt_yes_no() #True to use stored calibration, False to calibrate now

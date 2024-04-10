@@ -1,20 +1,9 @@
 import tkinter as tk
-from utils import round_it, FloatEntry
+from utils import round_it
+from gui_utils import FloatEntry, Variable, Point
 from numpy import loadtxt
-from enum import Enum, auto
 from data_utils import dataacq
 from window_settings import configuration
-
-class Variable(Enum):
-    VOLTAGE = 'Voltage'
-    CURRENT = 'Current'
-
-    def __str__(self):
-        return self.value
-
-class Point(Enum):
-    LOW = 0
-    HIGH = 1
 
 class calibration(tk.Tk): #Display the settings for editing
     def __init__(self, screenName: tuple[str, None] = None, baseName: tuple[str, None] = None, className: str = "Tk", useTk: bool = True, sync: bool = False, use: tuple[str, None] = None) -> None:
@@ -95,8 +84,8 @@ class calibration(tk.Tk): #Display the settings for editing
 
     def record_calibration_data(self,variable,point):
         board = configuration.board
-        sample_rate = configuration.board
-        sample_period = configuration.board
+        sample_rate = configuration.sample_rate
+        sample_period = configuration.sample_period
         dataavg = dataacq(board, sample_rate=sample_rate, sample_period=sample_period)
         if variable is Variable.CURRENT:
             self.dataavg[point][0] = dataavg[0]

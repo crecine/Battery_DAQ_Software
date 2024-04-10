@@ -1,6 +1,7 @@
 from numpy import loadtxt
 from daq_utils import daq1408
 from utils import prompt_yes_no, round_it, float_input
+from pathlib import Path
 
 def calibration(board:daq1408, read_cal=False):
     if not read_cal:           # calibrate
@@ -146,3 +147,9 @@ class Terminator2:
         else:
             return False
     __nonzero__=__bool__
+
+def get_path(file_name:str):
+    out_file = Path(file_name)
+    if not out_file.parent.exists():
+        out_file.parent.mkdir(parents=True, exist_ok=True)
+    return out_file

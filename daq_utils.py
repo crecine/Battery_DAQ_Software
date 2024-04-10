@@ -8,9 +8,9 @@ else:
     import uldaq
     from uldaq import InterfaceType, DaqDevice
     from linux_daq1408 import daq1408
+from dummy_daq1408 import daq1408 as dummy
 
-
-def config_first_detected_device(board_num=0, dev_id_list=None):
+def config_first_detected_device(board_num=0, dev_id_list=None, use_dummy=False):
     """
     For Windows, this will return the board_number, for Linux it will return a DaqDevice.
     In either case, the result will be passed directly to daq1408() to initialize it.
@@ -36,6 +36,10 @@ def config_first_detected_device(board_num=0, dev_id_list=None):
         devices = ul.get_daq_device_inventory(InterfaceType.ANY)
     else:
         devices = uldaq.get_daq_device_inventory(InterfaceType.ANY)
+
+    if not devices and use_dummy:
+        print('using dummy device')
+        return dummy(board_num)
 
     if not devices:
         raise Exception('Error: No DAQ devices found')

@@ -3,11 +3,13 @@ from tkinter import ttk
 from numpy import loadtxt
 from os import listdir, environ, system, path as ospath
 from sys import platform as platform_, path as syspath
+import time
 
-from window_calibration import calibration
+from window_calibration import calibration, read_cal_file
 from window_settings import settings, configuration
 from daq_utils import config_first_detected_device
-from data_utils import dataacq
+from data_utils import dataacq, Terminator2, get_path
+from utils import print_data
 
 def setup(): #Set up
     environ['DISPLAY'] = ':0' #allow Cygwin to create GUI windows
@@ -32,10 +34,48 @@ def setup(): #Set up
     return root
 
 def connect_daq():
-    configuration.board = config_first_detected_device(0)
+    configuration.board = config_first_detected_device(use_dummy=True)
 
 def run_daq():
-    dataacq(configuration.board)
+    conf = configuration
+    daq = conf.board
+    header_keys = conf.header_keys
+    local_time=time.ctime().replace(':','-').replace('  ',' ').replace(' ','_')
+    output_filename = f"data/{conf.filename}_{local_time}.csv"
+    out_file = get_path(output_filename)
+
+    startseconds = time.time()   #  Get the start time in seconds
+
+    dataavg = []
+    datatime1 = time.time()
+    term = Terminator2(conf.max_successive,conf.tol,conf.max_iter)
+    s,z = read_cal_file(filename="cal.dat")
+
+    with open(output_filename,'w') as output_file:
+        output_file.write(local_time+'\n')
+        output_file.write(run_name.get()+'\n')
+        output_file.write(','.join(header_keys)+'\n')
+        print_data(header_keys,'\n')
+        try:
+            while term.continue_reading:
+                while not term:
+                    #  function returns 5 seconds of averaged data for each channel in the dataavg[] array
+                    data = [datatime1-startseconds,*dataacq(daq,z,s,conf.sample_rate,conf.sample_period)]
+                    dataavg.append({key:val for key,val in zip(header_keys,data)})
+                    output_file.write(','.join([str(d) for d in data])+'\n')
+                    print_data(data)
+                    datatime2 = time.time()
+                    datatime1 = datatime2
+                    term.check_var(data[1])
+                term.reset()
+                output_file.write('\n')
+        except KeyboardInterrupt:
+            pass
+        except Exception as e:
+            print('\n', e)
+        finally:
+            # Free the buffer in a finally block to prevent a memory leak.
+            daq.release
 
 # if __name__ == "__main__":
 root = setup()
@@ -72,5 +112,13 @@ run_button = tk.Button(run_frame,text='Run',command=run_daq)
 run_button.pack(side = tk.RIGHT)
 connect_button = tk.Button(run_frame,text='Connect',command=connect_daq)
 connect_button.pack(side = tk.RIGHT)
+
+tab2.dispframe = tk.Frame(tab2,borderwidth=2,relief='groove')
+tab2.dispframe.pack()
+coming_soon = tk.Label(tab2.dispframe,text='Coming Soon')
+coming_soon.pack()
+from window_calibration import calibration
+calibration.add_data_row(self=tab2,data_set=[0]*4,title='')
+calibration.add_data_row(self=tab2,data_set=[0]*4,title='')
 
 root.mainloop()
