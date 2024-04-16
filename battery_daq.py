@@ -15,18 +15,21 @@ print("local time:",local_time)
 output_filename = f"data/test_results_{local_time}.csv"
 out_file = get_path(output_filename)
 
-# configure first detected device as board number 0
-daq = config_first_detected_device(0)
 try:
     from tkinter import Tk
-    Tk()
+    Tk().destroy()
     print('Launch GUI?')
     if prompt_yes_no():
         from window_settings import configuration
-        configuration.board = daq
         configuration.header_keys = header_keys
+        from gui import create_main_window
+        root = create_main_window()
+        root.mainloop()
+        exit()
 except:
     pass
+# configure first detected device as board number 0
+daq = config_first_detected_device(0,use_dummy=True)
 
 print(' Read calibration data from cal.dat file? ')
 read_cal = prompt_yes_no() #True to use stored calibration, False to calibrate now

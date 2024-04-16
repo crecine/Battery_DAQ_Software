@@ -36,6 +36,7 @@ def connect_daq():
     configuration.board = config_first_detected_device(use_dummy=True)
 
 def run_daq():
+    global run_name
     conf = configuration
     daq = conf.board
     header_keys = conf.header_keys
@@ -76,47 +77,51 @@ def run_daq():
             # Free the buffer in a finally block to prevent a memory leak.
             daq.release
 
-# if __name__ == "__main__":
-root = setup()
-root.geometry('400x475')
-root.title('Battery DAQ Software - Carl Recine')
+def create_main_window():
+    global run_name
+    root = setup()
+    root.geometry('400x475')
+    root.title('Battery DAQ Software - Carl Recine')
 
-tabControl = ttk.Notebook(root)
+    tabControl = ttk.Notebook(root)
 
-tab1 = ttk.Frame(tabControl)
-tab2 = ttk.Frame(tabControl)
-tabControl.add(tab1, text='Record')
-tabControl.add(tab2, text='Live View')
-tabControl.pack(expand=1, fill="both")
+    tab1 = ttk.Frame(tabControl)
+    tab2 = ttk.Frame(tabControl)
+    tabControl.add(tab1, text='Record')
+    tabControl.add(tab2, text='Live View')
+    tabControl.pack(expand=1, fill="both")
 
-button_frame = tk.Frame(tab1)
-button_frame.pack(fill='x', side=tk.TOP)
+    button_frame = tk.Frame(tab1)
+    button_frame.pack(fill='x', side=tk.TOP)
 
-cal_button = tk.Button(button_frame,text='Calibrate',command=calibration)
-cal_button.pack(side = tk.LEFT)
+    cal_button = tk.Button(button_frame,text='Calibrate',command=calibration)
+    cal_button.pack(side = tk.LEFT)
 
-sett_button = tk.Button(button_frame,text='Settings',command=settings)
-sett_button.pack(side = tk.RIGHT)
+    sett_button = tk.Button(button_frame,text='Settings',command=settings)
+    sett_button.pack(side = tk.RIGHT)
 
-input_frame = tk.Frame(tab1)
-input_frame.pack()
-run_label = tk.Label(input_frame,text='Run Name:')
-run_name = tk.Entry(input_frame)
-run_label.pack(side=tk.LEFT)
-run_name.pack(side=tk.LEFT)
+    input_frame = tk.Frame(tab1)
+    input_frame.pack()
+    run_label = tk.Label(input_frame,text='Run Name:')
+    run_name = tk.Entry(input_frame)
+    run_label.pack(side=tk.LEFT)
+    run_name.pack(side=tk.LEFT)
 
-run_frame = tk.Frame(tab1)
-run_frame.pack(side=tk.BOTTOM)
-run_button = tk.Button(run_frame,text='Run',command=run_daq)
-run_button.pack(side = tk.RIGHT)
-connect_button = tk.Button(run_frame,text='Connect',command=connect_daq)
-connect_button.pack(side = tk.RIGHT)
+    run_frame = tk.Frame(tab1)
+    run_frame.pack(side=tk.BOTTOM)
+    run_button = tk.Button(run_frame,text='Run',command=run_daq)
+    run_button.pack(side = tk.RIGHT)
+    connect_button = tk.Button(run_frame,text='Connect',command=connect_daq)
+    connect_button.pack(side = tk.RIGHT)
 
-tab2.dispframe = tk.Frame(tab2,borderwidth=2,relief='groove')
-tab2.dispframe.pack()
-coming_soon = tk.Label(tab2.dispframe,text='Coming Soon')
-coming_soon.pack()
-calibration.add_data_row(self=tab2,data_set=[0]*4,title='')
-calibration.add_data_row(self=tab2,data_set=[0]*4,title='')
+    tab2.dispframe = tk.Frame(tab2,borderwidth=2,relief='groove')
+    tab2.dispframe.pack()
+    coming_soon = tk.Label(tab2.dispframe,text='Coming Soon')
+    coming_soon.pack()
+    calibration.add_data_row(self=tab2,data_set=[0]*4,title='')
+    calibration.add_data_row(self=tab2,data_set=[0]*4,title='')
+    return root
 
-root.mainloop()
+if __name__ == "__main__":
+    root = create_main_window()
+    root.mainloop()
