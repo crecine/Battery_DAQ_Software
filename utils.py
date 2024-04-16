@@ -20,7 +20,6 @@ def float_input():
         except:
             print(f"{var} couldn't be converted to a float. Try again")
 
-
 def round_it(x, sig=None):
     # default sig figs to 2 decimal places out
     if isinstance(x, str):
@@ -46,7 +45,6 @@ def print_data(data, end='\r',sigfigs=5):
 def reset_cursor():
     """Reset the cursor in the terminal window."""
     stdout.write('\033[1;1H')
-
 
 def clear_eol():
     """Clear all characters to the end of the line."""
