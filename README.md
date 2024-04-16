@@ -1,3 +1,7 @@
+Battery_DAQ_Software is a data aquisition software intended to be used with the Measurement Computing USB-1408FS-PLUS
+
+This is designed to record voltage and current data while charging and discharging battery packs in various configurations, up to 7S.
+
 battery_daq.py and gui.py can be run directly with Python. \
 Utility functions are sorted into daq_utils, data_utils, gui_utils, and utils. \
 windows_daq1408 and linux_daq1408 wrap important functions from their respective libraries into a common interface. \
